@@ -5,3 +5,5 @@ seaborn>=0.12.0
 matplotlib>=3.7.0
 xgboost>=1.7.0
 streamlit>=1.22.0
+
+.\house-price-env\Scripts\streamlit run app.py
