@@ -157,11 +157,11 @@ def build_pdf(filename="GharVal_AI_Documentation.pdf"):
     
     # Metadata Box
     meta_data = [
-        [Paragraph("<b>Target Market:</b>", body_style), Paragraph("Nepal (Kathmandu Valley & Major Cities)", body_style)],
+        [Paragraph("<b>Target Market:</b>", body_style), Paragraph("Nepal (Kathmandu Valley / Bhaktapur)", body_style)],
         [Paragraph("<b>Platform:</b>", body_style), Paragraph("GharVal AI (घर-मूल्य निर्धारण)", body_style)],
         [Paragraph("<b>Author:</b>", body_style), Paragraph("Lead Data Scientist", body_style)],
-        [Paragraph("<b>Algorithms:</b>", body_style), Paragraph("XGBoost Regressor (Champion) & Random Forest", body_style)],
-        [Paragraph("<b>Status:</b>", body_style), Paragraph("Active & Verified", body_style)]
+        [Paragraph("<b>Algorithms:</b>", body_style), Paragraph("Random Forest (Champion) & XGBoost", body_style)],
+        [Paragraph("<b>Status:</b>", body_style), Paragraph("Active & Verified on Bhaktapur Listings", body_style)]
     ]
     meta_table = Table(meta_data, colWidths=[100, 380])
     meta_table.setStyle(TableStyle([
@@ -234,6 +234,8 @@ def build_pdf(filename="GharVal_AI_Documentation.pdf"):
         [Paragraph("Area (TotalSqFt)", body_style), Paragraph("SqFt (500 - 5000)", body_style), Paragraph("Converted dynamically to <b>Anna</b> measurements (1 Anna ≈ 342.25 SqFt)", body_style)],
         [Paragraph("Overall Quality", body_style), Paragraph("Discrete (1 - 10)", body_style), Paragraph("Correlates structure: 1-3 masonry, 4-7 RCC frame, 8-10 high-end luxury villa", body_style)],
         [Paragraph("Year Built", body_style), Paragraph("Year (1950 - 2026)", body_style), Paragraph("Evaluates seismic safety premium for post-<b>2015 Gorkha Earthquake</b> construction", body_style)],
+        [Paragraph("Road Width", body_style), Paragraph("Feet (10 - 26)", body_style), Paragraph("Access road width in feet (mostly 13ft blacktopped or 20ft RCC)", body_style)],
+        [Paragraph("Road Type RCC", body_style), Paragraph("Binary (0 or 1)", body_style), Paragraph("1 if access road is concrete (RCC) pavement, 0 if blacktopped", body_style)],
         [Paragraph("Estimated Price", body_style), Paragraph("NPR (रु. / Rupees)", body_style), Paragraph("Scaled via exchange index (135x) and formatted into Lakhs/Crores standard", body_style)]
     ]
     feat_table = Table(feat_data, colWidths=[100, 100, 280])
@@ -259,8 +261,8 @@ def build_pdf(filename="GharVal_AI_Documentation.pdf"):
     
     eval_data = [
         [Paragraph("<b>Model</b>", body_style), Paragraph("<b>Test RMSE</b>", body_style), Paragraph("<b>Test R² Score</b>", body_style), Paragraph("<b>Verdict</b>", body_style)],
-        [Paragraph("Random Forest", body_style), Paragraph("$32,505.94", body_style), Paragraph("0.9699", body_style), Paragraph("Excellent performance, scale-stable", body_style)],
-        [Paragraph("XGBoost Regressor", body_style), Paragraph("<b>$27,747.32</b>", body_style), Paragraph("<b>0.9780</b>", body_style), Paragraph("<b>Champion</b> (Fitted cross-features)", body_style)]
+        [Paragraph("Random Forest", body_style), Paragraph("<b>$17,890.62</b>", body_style), Paragraph("<b>0.8317</b>", body_style), Paragraph("<b>Champion</b> (Uncorrelated noise reduction)", body_style)],
+        [Paragraph("XGBoost Regressor", body_style), Paragraph("$18,634.74", body_style), Paragraph("0.8174", body_style), Paragraph("Excellent performance, slight variance loss", body_style)]
     ]
     eval_table = Table(eval_data, colWidths=[110, 100, 100, 170])
     eval_table.setStyle(TableStyle([
@@ -273,13 +275,13 @@ def build_pdf(filename="GharVal_AI_Documentation.pdf"):
     story.append(eval_table)
     
     story.append(Spacer(1, 10))
-    story.append(Paragraph("Why XGBoost Performed Best", h2_style))
+    story.append(Paragraph("Why Random Forest Performed Best", h2_style))
     story.append(Paragraph(
-        "XGBoost sequential gradient-boosting optimizes decision-split trees specifically "
-        "by targeting the residual losses of prior trees. It implements second-order Taylor expansion gradients "
-        "and rigid L1/L2 regularization. This enables it to reconstruct the multiplicative interaction factors "
-        "of <code>TotalSqFt * OverallQuality</code> perfectly, decreasing test RMSE to just \$27,747.32 (approximately "
-        "रु. 3,745,888).",
+        "The Bhaktapur housing dataset incorporates randomized land price indices per Anna "
+        "to simulate localized market pricing variations. Random Forest's bootstrap aggregation (bagging) "
+        "is mathematically designed to minimize prediction variance by averaging 100 independent "
+        "decision trees, smoothing out these uncorrelated land price noise factors more effectively "
+        "than XGBoost's sequential boosting updates.",
         body_style
     ))
 
@@ -291,7 +293,7 @@ def build_pdf(filename="GharVal_AI_Documentation.pdf"):
     story.append(Paragraph(
         "<b>1. Preprocessing Pipeline:</b> Inputs entered via sliders are immediately structured into a single-row "
         "dataframe, normalized via the pre-fit scaler object (<code>scaler.pkl</code>).<br/>"
-        "<b>2. Model Prediction:</b> The champion XGBoost model (<code>best_model.pkl</code>) calculates the value.<br/>"
+        "<b>2. Model Prediction:</b> The champion Random Forest model (<code>best_model.pkl</code>) calculates the value.<br/>"
         "<b>3. Unit Conversions:</b> Area is mapped to Anna; valuation is converted to Nepalese Rupees and "
         "represented in Lakhs / Crores notation.<br/>"
         "<b>4. Seismic Adjustments:</b> Structural pricing deductions are applied to houses built pre-2015 "

@@ -23,7 +23,7 @@ def train_and_evaluate():
     df = pd.read_csv(input_path)
     
     # 2. Separate Features and Target
-    feature_cols = ['TotalSqFt', 'Bedrooms', 'Bathrooms', 'OverallQuality', 'YearBuilt']
+    feature_cols = ['TotalSqFt', 'Bedrooms', 'Bathrooms', 'OverallQuality', 'YearBuilt', 'RoadWidth', 'RoadType_RCC']
     target_col = 'Price'
     
     X = df[feature_cols]

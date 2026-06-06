@@ -143,7 +143,7 @@ if model_payload is None or scaler is None:
 # Constants
 NPR_EXCHANGE_RATE = 135.0  # Conversion rate to match Nepalese market pricing
 
-# Sidebar - Core House Features with Nepalese conversions (Anna/Ropani)
+# Sidebar - Core House Features with Nepalese conversions
 st.sidebar.markdown("<h2 style='color:#1e3a8a;'>🔍 Property Specifications</h2>", unsafe_allow_html=True)
 st.sidebar.write("Adjust the features below to dynamically calculate the house value.")
 
@@ -153,12 +153,19 @@ total_sqft = st.sidebar.slider("Total Area (Square Footage)", min_value=500, max
 anna_equiv = total_sqft / 342.25
 st.sidebar.caption(f"💡 Equivalent to approx. **{anna_equiv:.2f} Anna** (1 Anna ≈ 342.25 SqFt)")
 
-bedrooms = st.sidebar.slider("Bedrooms", min_value=1, max_value=6, value=3, step=1)
-bathrooms = st.sidebar.slider("Bathrooms", min_value=1.0, max_value=4.5, value=2.0, step=0.5)
+bedrooms = st.sidebar.slider("Bedrooms", min_value=2, max_value=8, value=5, step=1)
+bathrooms = st.sidebar.slider("Bathrooms", min_value=1.5, max_value=5.0, value=2.5, step=0.5)
 overall_quality = st.sidebar.slider("Overall Quality (1-10 Scale)", min_value=1, max_value=10, value=6, step=1)
 st.sidebar.caption("1-3: Simple brick-masonry, 4-7: RCC frame structure, 8-10: Luxury villa construction")
 
-year_built = st.sidebar.slider("Year Built (B.S. / A.D.)", min_value=1950, max_value=2026, value=2018, step=1)
+year_built = st.sidebar.slider("Year Built (B.S. / A.D.)", min_value=1990, max_value=2026, value=2018, step=1)
+
+# Road access parameters
+st.sidebar.markdown("---")
+st.sidebar.markdown("<h4 style='color:#1e3a8a;'>🛣️ Road Profile</h4>", unsafe_allow_html=True)
+road_width = st.sidebar.slider("Road Width (Feet)", min_value=10, max_value=26, value=13, step=1)
+road_type = st.sidebar.radio("Road Surface Type", options=["Blacktopped", "RCC"])
+road_type_rcc = 1 if road_type == "RCC" else 0
 
 # Main Grid (2 Columns)
 col1, col2 = st.columns([3, 2])
@@ -167,8 +174,8 @@ with col1:
     st.markdown("<h3 style='color:#1e3a8a; margin-bottom: 15px;'>🔮 Real-Time Valuation</h3>", unsafe_allow_html=True)
     
     # Prepare single data point for prediction
-    input_data = pd.DataFrame([[total_sqft, bedrooms, bathrooms, overall_quality, year_built]], 
-                              columns=['TotalSqFt', 'Bedrooms', 'Bathrooms', 'OverallQuality', 'YearBuilt'])
+    input_data = pd.DataFrame([[total_sqft, bedrooms, bathrooms, overall_quality, year_built, road_width, road_type_rcc]], 
+                              columns=['TotalSqFt', 'Bedrooms', 'Bathrooms', 'OverallQuality', 'YearBuilt', 'RoadWidth', 'RoadType_RCC'])
     
     # Preprocess
     input_scaled = scaler.transform(input_data)
@@ -201,6 +208,7 @@ with col1:
             <span class="feature-indicator">🛁 {bathrooms} Bath</span>
             <span class="feature-indicator">⭐️ Quality: {overall_quality}/10</span>
             <span class="feature-indicator">📅 Built: {year_built}</span>
+            <span class="feature-indicator">🛣️ Road: {road_width}ft {road_type}</span>
         </div>
     </div>
     """
@@ -220,6 +228,12 @@ with col1:
         st.markdown(f"- **Size Scale:** Your property is {abs(sqft_diff)} SqFt {'larger' if sqft_diff >= 0 else 'smaller'} than the median Kathmandu home (2,200 SqFt / 6.4 Anna), significantly influencing land base value.")
         st.markdown(f"- **Structure Rating:** A build quality rating of **{overall_quality}/10** indicates an **{'Earthquake-resistant Premium RCC structure' if overall_quality >= 6 else 'Standard brick masonry layout'}**, affecting structural valuation safety margins.")
         
+        # Road Infrastructure factor
+        if road_type == "RCC":
+            st.markdown(f"- **Road Infrastructure:** Access is via a **{road_width}ft concrete (RCC) road**. RCC roads carry a structural premium due to superior durability and drainage quality over asphalt.")
+        else:
+            st.markdown(f"- **Road Infrastructure:** Access is via a **{road_width}ft blacktopped road**, representing standard urban accessibility inside Bhaktapur residential zones.")
+            
         # Earthquake factor: major pricing driver in Nepal real estate
         if year_built >= 2015:
             st.markdown("- **Structural Vintage:** Built post **2015 (Gorkha Earthquake)**. Post-earthquake structures command a premium due to compliance with updated structural engineering guidelines and seismic safety measures in Nepal.")
@@ -264,7 +278,7 @@ with col2:
         }).sort_values(by='Importance', ascending=True)
         
         st.markdown("<p style='font-size:0.9rem; font-weight:600; margin-bottom: 5px; color:#475569;'>Model Feature Importance Profile</p>", unsafe_allow_html=True)
-        st.bar_chart(feature_imp_df.set_index('Feature'), height=150)
+        st.bar_chart(feature_imp_df.set_index('Feature'), height=180)
 
 # Section 3: Visual Analytics / EDA Plots
 st.markdown("<h3 style='color:#1e3a8a; margin-top:20px; margin-bottom: 15px;'>📈 Visual Market Analytics</h3>", unsafe_allow_html=True)
