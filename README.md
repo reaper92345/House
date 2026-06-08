@@ -7,7 +7,7 @@ A production-grade, end-to-end Machine Learning pipeline and interactive Web App
 ## 🏗️ Project Architecture
 
 ```text
-d:\Rajendra\Datascience\
+d:\Datascience\
 ├── data/
 │   └── housing_data.csv              # Synthetic/Real housing dataset
 ├── plots/
