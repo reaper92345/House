@@ -110,3 +110,5 @@ streamlit run app.py
 - **Overall Quality**: Overall house rating from 1 (Poor) to 10 (Excellent).
 - **Year Built**: House construction year (1900 to 2026).
 My name is Suman and this is my contribution.
+
+---
