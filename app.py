@@ -1,8 +1,10 @@
 import os
 import pickle
+import io
 import numpy as np
 import pandas as pd
 import streamlit as st
+from src.generate_pdf import generate_valuation_report
 
 # Set page configuration with a premium look
 st.set_page_config(
@@ -213,6 +215,39 @@ with col1:
     </div>
     """
     st.markdown(price_html, unsafe_allow_html=True)
+    
+    # PDF generation buffer
+    pdf_buffer = io.BytesIO()
+    specs_dict = {
+        'total_sqft': total_sqft,
+        'anna_equiv': anna_equiv,
+        'bedrooms': bedrooms,
+        'bathrooms': bathrooms,
+        'overall_quality': overall_quality,
+        'year_built': year_built,
+        'road_width': road_width,
+        'road_type': road_type
+    }
+    
+    # Compile report in memory
+    generate_valuation_report(
+        pdf_buffer, 
+        specs_dict, 
+        predicted_npr, 
+        nepali_notation, 
+        model_payload
+    )
+    pdf_bytes = pdf_buffer.getvalue()
+    
+    st.download_button(
+        label="📥 Download Valuation Report PDF",
+        data=pdf_bytes,
+        file_name=f"GharVal_Valuation_Report_{total_sqft}SqFt_{bedrooms}Bed.pdf",
+        mime="application/pdf",
+        use_container_width=True
+    )
+    
+    st.write("") # Tiny spacer
     
     # Analytics section: Expandable insights customized for Nepal
     with st.expander("📈 Insights & Explainability (नेपाल घर-जग्गा विश्लेषण)", expanded=True):

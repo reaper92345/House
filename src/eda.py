@@ -92,7 +92,9 @@ def perform_eda():
         data=df, 
         x='OverallQuality', 
         y='Price', 
+        hue='OverallQuality',
         palette="Blues",
+        legend=False,
         fliersize=0, # Hide outliers in boxplot to avoid double drawing
         linewidth=1.2
     )

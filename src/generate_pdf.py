@@ -3,7 +3,7 @@ import sys
 from reportlab.lib.pagesizes import letter
 from reportlab.lib.units import inch
 from reportlab.lib.colors import HexColor
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, PageBreak
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, PageBreak, Image
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.pdfgen import canvas
 
@@ -318,6 +318,270 @@ def build_pdf(filename="GharVal_AI_Documentation.pdf"):
     # Build the document
     doc.build(story, canvasmaker=NumberedCanvas)
     print(f"Successfully generated PDF documentation: {filename}")
+
+
+def generate_valuation_report(output_target, specs, predicted_price_npr, nepali_notation, model_payload):
+    """
+    Generates a beautifully formatted, single-page PDF report for a specific property valuation.
+    """
+    doc = SimpleDocTemplate(
+        output_target,
+        pagesize=letter,
+        leftMargin=36,
+        rightMargin=36,
+        topMargin=36,
+        bottomMargin=36
+    )
+    
+    styles = getSampleStyleSheet()
+    
+    # Custom colors
+    color_success = HexColor("#059669")     # Green
+    
+    # Custom styles
+    title_style = ParagraphStyle(
+        'RepTitle',
+        parent=styles['Normal'],
+        fontName='Helvetica-Bold',
+        fontSize=20,
+        leading=24,
+        textColor=COLOR_PRIMARY
+    )
+    
+    subtitle_style = ParagraphStyle(
+        'RepSubtitle',
+        parent=styles['Normal'],
+        fontName='Helvetica',
+        fontSize=9,
+        leading=13,
+        textColor=COLOR_MUTED
+    )
+    
+    h2_style = ParagraphStyle(
+        'RepH2',
+        parent=styles['Normal'],
+        fontName='Helvetica-Bold',
+        fontSize=12,
+        leading=16,
+        textColor=COLOR_PRIMARY,
+        spaceBefore=10,
+        spaceAfter=6,
+        keepWithNext=True
+    )
+    
+    body_style = ParagraphStyle(
+        'RepBody',
+        parent=styles['Normal'],
+        fontName='Helvetica',
+        fontSize=8.5,
+        leading=12,
+        textColor=COLOR_TEXT
+    )
+    
+    bold_body_style = ParagraphStyle(
+        'RepBoldBody',
+        parent=body_style,
+        fontName='Helvetica-Bold'
+    )
+    
+    price_val_style = ParagraphStyle(
+        'PriceVal',
+        parent=styles['Normal'],
+        fontName='Helvetica-Bold',
+        fontSize=24,
+        leading=28,
+        textColor=color_success,
+        alignment=1 # Centered
+    )
+    
+    price_lbl_style = ParagraphStyle(
+        'PriceLbl',
+        parent=styles['Normal'],
+        fontName='Helvetica-Bold',
+        fontSize=10,
+        leading=12,
+        textColor=COLOR_MUTED,
+        alignment=1 # Centered
+    )
+    
+    notation_style = ParagraphStyle(
+        'PriceNotation',
+        parent=styles['Normal'],
+        fontName='Helvetica-Bold',
+        fontSize=12,
+        leading=14,
+        textColor=COLOR_ACCENT,
+        alignment=1 # Centered
+    )
+
+    story = []
+    
+    # 1. Header Row
+    header_data = [
+        [
+            Paragraph("<b>GharVal AI</b>", title_style),
+            Paragraph("<b>Valuation Certificate</b><br/>Generated: Real-Time Live Estimation", ParagraphStyle('RightMeta', parent=subtitle_style, alignment=2))
+        ]
+    ]
+    header_table = Table(header_data, colWidths=[270, 270])
+    header_table.setStyle(TableStyle([
+        ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
+        ('BOTTOMPADDING', (0,0), (-1,-1), 0),
+        ('TOPPADDING', (0,0), (-1,-1), 0),
+    ]))
+    story.append(header_table)
+    story.append(Spacer(1, 4))
+    
+    # Accent flag colors strip
+    flag_table = Table([["", ""]], colWidths=[10, 530])
+    flag_table.setStyle(TableStyle([
+        ('BACKGROUND', (0,0), (0,0), COLOR_ACCENT),
+        ('BACKGROUND', (1,0), (1,0), COLOR_PRIMARY),
+        ('BOTTOMPADDING', (0,0), (-1,-1), 3),
+        ('TOPPADDING', (0,0), (-1,-1), 3),
+    ]))
+    story.append(flag_table)
+    story.append(Spacer(1, 10))
+    
+    # 2. Valuation Summary Card
+    val_card_data = [
+        [Paragraph("ESTIMATED MARKET VALUE", price_lbl_style)],
+        [Paragraph(f"रु. {predicted_price_npr:,.0f} NPR", price_val_style)],
+        [Paragraph(f"Equivalent to Approx: {nepali_notation}", notation_style)]
+    ]
+    val_card = Table(val_card_data, colWidths=[540])
+    val_card.setStyle(TableStyle([
+        ('BACKGROUND', (0,0), (-1,-1), COLOR_BG_LIGHT),
+        ('BOX', (0,0), (-1,-1), 1, COLOR_BORDER),
+        ('PADDING', (0,0), (-1,-1), 10),
+        ('BOTTOMPADDING', (0,0), (-1,-1), 8),
+        ('TOPPADDING', (0,0), (-1,-1), 8),
+    ]))
+    story.append(val_card)
+    story.append(Spacer(1, 12))
+    
+    # 3. Property Specifications Table
+    story.append(Paragraph("🔍 Property Specifications", h2_style))
+    
+    road_surf = specs.get('road_type', 'Blacktopped')
+    road_width_val = specs.get('road_width', 13)
+    seismic = "Post-2015 Compliant" if specs.get('year_built', 2018) >= 2015 else "Pre-2015 Vintage"
+    
+    specs_data = [
+        [
+            Paragraph("<b>Total Area</b>", body_style),
+            Paragraph(f"{specs.get('total_sqft', 1800):,} SqFt ({specs.get('anna_equiv', 5.26):.2f} Anna)", body_style),
+            Paragraph("<b>Bedrooms</b>", body_style),
+            Paragraph(f"{specs.get('bedrooms', 5)} Bed", body_style)
+        ],
+        [
+            Paragraph("<b>Bathrooms</b>", body_style),
+            Paragraph(f"{specs.get('bathrooms', 2.5)} Bath", body_style),
+            Paragraph("<b>Overall Quality</b>", body_style),
+            Paragraph(f"{specs.get('overall_quality', 6)} / 10", body_style)
+        ],
+        [
+            Paragraph("<b>Year Built</b>", body_style),
+            Paragraph(f"{specs.get('year_built', 2018)} ({seismic})", body_style),
+            Paragraph("<b>Road Access</b>", body_style),
+            Paragraph(f"{road_width_val} ft ({road_surf})", body_style)
+        ]
+    ]
+    
+    specs_table = Table(specs_data, colWidths=[120, 150, 120, 150])
+    specs_table.setStyle(TableStyle([
+        ('BOX', (0,0), (-1,-1), 0.5, COLOR_BORDER),
+        ('INNERGRID', (0,0), (-1,-1), 0.25, COLOR_BORDER),
+        ('PADDING', (0,0), (-1,-1), 6),
+        ('ROWBACKGROUNDS', (0,0), (-1,-1), [HexColor("#ffffff"), COLOR_BG_LIGHT]),
+        ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
+    ]))
+    story.append(specs_table)
+    story.append(Spacer(1, 12))
+    
+    # 4. Market Insights and Visual Analytics Grid (2 Columns)
+    left_flowables = []
+    left_flowables.append(Paragraph("📈 Valuation Drivers", h2_style))
+    left_flowables.append(Spacer(1, 4))
+    
+    avg_sqft = 2200
+    avg_qual = 6
+    sqft_diff = specs.get('total_sqft', 1800) - avg_sqft
+    
+    size_txt = f"Property is {abs(sqft_diff)} SqFt {'larger' if sqft_diff >= 0 else 'smaller'} than regional median (2,200 SqFt / 6.4 Anna), scaling the land cost base."
+    quality_txt = f"Quality score of {specs.get('overall_quality', 6)}/10 represents a {'reinforced RCC structure' if specs.get('overall_quality', 6) >= 6 else 'standard masonry build'}, carrying safety margins."
+    road_txt = f"Accessed via a {road_width_val}ft {road_surf.lower()} road. RCC roads offer a premium due to monsoon durability."
+    vintage_txt = f"Built in {specs.get('year_built', 2018)}. {'Post-2015 seismic building guidelines apply.' if specs.get('year_built', 2018) >= 2015 else 'Pre-earthquake structures are subject to structural depreciation.'}"
+    
+    insights = [
+        f"<b>• Size Influence:</b> {size_txt}",
+        f"<b>• Build Quality:</b> {quality_txt}",
+        f"<b>• Accessibility:</b> {road_txt}",
+        f"<b>• Seismic Code:</b> {vintage_txt}"
+    ]
+    
+    for ins in insights:
+        left_flowables.append(Paragraph(ins, ParagraphStyle('InsightTxt', parent=body_style, spaceAfter=6)))
+        
+    right_flowables = []
+    right_flowables.append(Paragraph("📊 Model Telemetry & Analytics", h2_style))
+    right_flowables.append(Spacer(1, 4))
+    
+    r2_score_val = model_payload.get('r2', 0.8317)
+    rmse_val = model_payload.get('rmse', 17890.62) * 135.0  # RMSE in NPR
+    
+    telemetry_data = [
+        [Paragraph("<b>ML Algorithm</b>", body_style), Paragraph(model_payload.get('model_name', 'Random Forest'), bold_body_style)],
+        [Paragraph("<b>R² Coefficient</b>", body_style), Paragraph(f"{r2_score_val:.4f}", body_style)],
+        [Paragraph("<b>Test RMSE</b>", body_style), Paragraph(f"रु. {rmse_val:,.0f}", body_style)]
+    ]
+    telemetry_table = Table(telemetry_data, colWidths=[100, 140])
+    telemetry_table.setStyle(TableStyle([
+        ('BOX', (0,0), (-1,-1), 0.5, COLOR_BORDER),
+        ('INNERGRID', (0,0), (-1,-1), 0.25, COLOR_BORDER),
+        ('PADDING', (0,0), (-1,-1), 4),
+        ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
+    ]))
+    right_flowables.append(telemetry_table)
+    right_flowables.append(Spacer(1, 8))
+    
+    # Embed the scatter plot
+    plot_path = "plots/price_vs_sqft.png"
+    if os.path.exists(plot_path):
+        right_flowables.append(Image(plot_path, width=240, height=130))
+    else:
+        right_flowables.append(Paragraph("[Price vs SqFt scatter plot not found]", body_style))
+        
+    grid_table = Table([[left_flowables, right_flowables]], colWidths=[260, 280])
+    grid_table.setStyle(TableStyle([
+        ('VALIGN', (0,0), (-1,-1), 'TOP'),
+        ('LEFTPADDING', (0,0), (-1,-1), 0),
+        ('RIGHTPADDING', (0,0), (-1,-1), 0),
+        ('BOTTOMPADDING', (0,0), (-1,-1), 0),
+        ('TOPPADDING', (0,0), (-1,-1), 0),
+    ]))
+    story.append(grid_table)
+    story.append(Spacer(1, 10))
+    
+    # 5. Footer Sign-off
+    footer_data = [[
+        Paragraph(
+            "<b>Disclaimer:</b> This report is generated automatically by GharVal AI. "
+            "Valuations are estimations calculated by Machine Learning models based on historical seed listings. "
+            "Actual market values may vary depending on direct negotiation and local trends.",
+            ParagraphStyle('Disclaimer', parent=body_style, fontSize=7, leading=8.5, textColor=COLOR_MUTED)
+        )
+    ]]
+    footer_table = Table(footer_data, colWidths=[540])
+    footer_table.setStyle(TableStyle([
+        ('BACKGROUND', (0,0), (-1,-1), COLOR_BG_LIGHT),
+        ('BOX', (0,0), (-1,-1), 0.5, COLOR_BORDER),
+        ('PADDING', (0,0), (-1,-1), 6),
+    ]))
+    story.append(footer_table)
+    
+    doc.build(story)
+
 
 if __name__ == '__main__':
     build_pdf()
